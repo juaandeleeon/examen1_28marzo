@@ -1,0 +1,53 @@
+import threading
+import queue
+import time
+import random
+
+# Duración total del programa (en segundos)
+TIEMPO_EJECUCION = 5
+
+# Cola compartida para almacenar temporalmente las imágenes
+almacen_imagenes = queue.Queue()
+
+# Evento para detener los hilos cuando se acabe el tiempo
+finalizar_evento = threading.Event()
+
+# Función para simular la llegada impredecible de imágenes (Productor)
+def recibir_imagenes():
+    contador = 1
+    while not finalizar_evento.is_set():
+        imagen = f"Imagen_{contador}"
+        almacen_imagenes.put(imagen)  # almacena la imagen en la cola
+        print(f"[RECEPCIÓN] {imagen} recibida y almacenada.")
+        contador += 1
+        time.sleep(random.uniform(0.2, 1.0))  # llegada impredecible
+
+# Función para simular el procesamiento lento (Consumidor)
+def procesar_imagenes():
+    while not finalizar_evento.is_set() or not almacen_imagenes.empty():
+        try:
+            imagen = almacen_imagenes.get(timeout=1)  # espera hasta 1s por imagen
+            print(f"--> Procesando {imagen}...")
+            time.sleep(random.uniform(1.5, 3.0))  # procesamiento lento
+            print(f"[PROCESADO] {imagen} procesada correctamente.")
+            almacen_imagenes.task_done()
+        except queue.Empty:
+            # Si no hay imágenes en la cola y ya se pidió finalizar, termina
+            continue
+
+# Crear e iniciar los hilos
+hilo_productor = threading.Thread(target=recibir_imagenes)
+hilo_consumidor = threading.Thread(target=procesar_imagenes)
+
+hilo_productor.start()
+hilo_consumidor.start()
+
+# Esperar el tiempo de ejecución definido
+time.sleep(TIEMPO_EJECUCION)
+finalizar_evento.set()  # señal para detener los hilos
+
+# Esperar a que terminen ambos hilos
+hilo_productor.join()
+hilo_consumidor.join()
+
+print("\n[SISTEMA] Procesamiento finalizado. Todas las imágenes han sido gestionadas.")
