@@ -1,0 +1,1 @@
+###Este programa simula un sistema de recepción y procesamiento de imágenes satelitales utilizando hilos en Python. Se emplea una cola para almacenar las imágenes temporalmente, permitiendo que un hilo reciba imágenes de forma impredecible mientras otro las procesa lentamente, garantizando concurrencia, orden y que no se pierdan datos, incluso bajo alta carga.
